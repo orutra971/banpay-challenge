@@ -45,6 +45,24 @@ To run the application, use the command:
 ```bash
 mvn spring-boot:run
 ```
+## Running for Production
+
+To run the application in production we have to create the package and create a image with docker
+
+1. Create the package of the application
+    ```bash
+    mvn clean install package -Pprod
+    ```
+2. Build the docker image
+    ```bash
+    docker build --tag=banpay-challenge:latest .
+    ```
+3. Run the application via ```docker-compose```
+    ```bash
+    docker-compose -f docker-compose.prod.yml up
+    ```
+
+
 
 ## Built With
 

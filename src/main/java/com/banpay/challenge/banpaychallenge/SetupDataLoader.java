@@ -12,14 +12,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
+import org.springframework.util.FileCopyUtils;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,7 +37,6 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
 	private final PasswordEncoder passwordEncoder;
 
 	boolean alreadySetup = false;
-
 	/**
 	 * Constructor for the SetupDataLoader class
 	 *
@@ -79,7 +78,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
 			return;
 		}
 
-		User user = getJson("classpath:admin.json");
+		User user = getJson("static/admin.json");
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
 		user.setRoles(user.getRoles().stream().map(u -> {
 					Optional<Role> role = roleRepository.findByName(u.getName());
@@ -111,16 +110,15 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
 	/**
 	 * Reads user data from JSON file
 	 *
-	 * @param path Path to the JSON file
 	 * @return User instance with data from JSON file
 	 */
-	public User getJson(String path) {
+	public User getJson(String json) {
 		LOGGER.info("getJson: {} ", alreadySetup);
-		File file = null;
 		try {
-			file = ResourceUtils.getFile(path);
+			ClassPathResource classPathResource = new ClassPathResource(json);
+			byte[] binaryData = FileCopyUtils.copyToByteArray(classPathResource.getInputStream());
 			//Read File Content
-			String content = new String(Files.readAllBytes(file.toPath()));
+			String content = new String(binaryData, StandardCharsets.UTF_8);
 			//Get a Json String
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.writeValueAsString(ERole.ROLE_ADMIN);
