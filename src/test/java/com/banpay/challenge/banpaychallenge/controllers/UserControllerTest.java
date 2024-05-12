@@ -40,6 +40,7 @@ class UserControllerTest {
 
 	private static final  PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
 
+	private Long adminId;
 	private final String adminUsername = "orutra971";
 	private final String adminPassword = "Fx97dxdyaLL!";
 	private final String adminEmail = "orutra971@hotmail.com";
@@ -98,7 +99,7 @@ class UserControllerTest {
 		user.setPassword(passwordEncoder.encode(adminPassword));
 		user.setRoles(Set.of(roleService.getRole(ERole.ROLE_ADMIN)));
 
-		userRepository.save(user);
+		adminId = userRepository.save(user).getId();
 	}
 
 
@@ -167,9 +168,11 @@ class UserControllerTest {
 	 * <p>
 	 * It performs the following actions:
 	 * </p>
-	 *    <li>Obtains the CSRF token.</li>
-	 *    <li>Signs in with the admin's credentials using the obtained CSRF token.</li>
-	 *    <li>Calls the getAllUsers method with the obtained CSRF token, auth token, and a page number.</li>
+	 * <ol>
+	 *   <li>Obtains the CSRF token.</li>
+	 *   <li>Signs in with the admin's credentials using the obtained CSRF token.</li>
+	 *   <li>Calls the getAllUsers method with the obtained CSRF token, auth token, and a page number.</li>
+	 * </ol>
 	 */
 	@Test
 	@Order(4)
@@ -179,6 +182,65 @@ class UserControllerTest {
 		String csrfToken = getCsrf();
 		String authToken = signinWithCredential(csrfToken, adminUsername, adminPassword);
 		getAllUsers(csrfToken, authToken,1);
+	}
+
+	/**
+	 * Tests the method getUserWithId.
+	 * <p>
+	 * This test method performs the following actions:
+	 * </p>
+	 * <ol>
+	 *   <li>Obtains a CSRF token using the method getCsrf().</li>
+	 *   <li>Signs in as an administrator using the signinWithCredential() method with the provided credentials.</li>
+	 *   <li>Calls the getUserById() method with the obtained CSRF token, authentication token, and the adminId parameter.</li>
+	 *   <li>Asserts that the HTTP response status code is HttpStatus.OK (200).</li>
+	 *   <li>Asserts that the response message is "User obtained successfully".</li>
+	 *   <li>Asserts that the username in the response body matches the adminUsername parameter.</li>
+	 *   <li>Asserts that the email in the response body matches the adminEmail parameter.</li>
+	 * </ol>
+	 */
+	@Test
+	@Order(5)
+	void testGetUserWithId() {
+		System.out.println("USER CONTROLLER TEST: testGetUserWithId");
+
+		String csrfToken = getCsrf();
+		String authToken = signinWithCredential(csrfToken, adminUsername, adminPassword);
+		getUserById(csrfToken, authToken, adminId.intValue())
+				.then()
+				.assertThat()
+				.statusCode(HttpStatus.OK.value())
+				.body("message", is("User obtained successfully"))
+				.body("data.username", is(adminUsername))
+				.body("data.email", is(adminEmail));
+	}
+
+
+	/**
+	 * This method tests the functionality of getting a user by id when the user is not found.
+	 * <p>
+	 * It performs the following steps:
+	 * </p>
+	 * <ol>
+	 *   <li>Obtains a CSRF token from the server.</li>
+	 *   <li>Signs in using the admin credentials.</li>
+	 *   <li>Calls the getUserById method with a non-existent user id.</li>
+	 *   <li>Verifies that the response status code is HttpStatus.NOT_FOUND (404).</li>
+	 *   <li>Checks that the response body contains the message "User not found".</li>
+	 * </ol>
+	 */
+	@Test
+	@Order(6)
+	void testGetUserWithIdNotFound() {
+		System.out.println("USER CONTROLLER TEST: testGetUserWithIdNotFound");
+
+		String csrfToken = getCsrf();
+		String authToken = signinWithCredential(csrfToken, adminUsername, adminPassword);
+		getUserById(csrfToken, authToken, 100)
+				.then()
+				.assertThat()
+				.statusCode(HttpStatus.NOT_FOUND.value())
+				.body("message", is("User not found"));
 	}
 
 	/**
@@ -202,7 +264,7 @@ class UserControllerTest {
 	 * @see ModifyUserRequest
 	 */
 	@Test
-	@Order(5)
+	@Order(7)
 	void testModifyNonExistingUser() {
 		System.out.println("USER CONTROLLER TEST: testModifyNonExistingUser");
 
@@ -250,7 +312,7 @@ class UserControllerTest {
 	 * @see ModifyUserRequest
 	 */
 	@Test
-	@Order(6)
+	@Order(8)
 	void testModifyUserUsername() {
 		System.out.println("USER CONTROLLER TEST: testModifyUserUsername");
 
@@ -291,7 +353,7 @@ class UserControllerTest {
 	 * </ol>
 	 */
 	@Test
-	@Order(7)
+	@Order(9)
 	void testModifyUserUsernameSameUsername() {
 		System.out.println("USER CONTROLLER TEST: testModifyUserUsernameSameUsername");
 
@@ -332,7 +394,7 @@ class UserControllerTest {
 	 * </ol>
 	 */
 	@Test
-	@Order(8)
+	@Order(10)
 	void testModifyUserUsernameExistingUsernameBadRequest() {
 		System.out.println("USER CONTROLLER TEST: testModifyUserUsernameExistingUsernameBadRequest");
 
@@ -377,7 +439,7 @@ class UserControllerTest {
 	 * @see ModifyUserRequest
 	 */
 	@Test
-	@Order(9)
+	@Order(11)
 	void testModifyUserEmail() {
 		System.out.println("USER CONTROLLER TEST: testModifyUserEmail");
 
@@ -418,7 +480,7 @@ class UserControllerTest {
 	 * </ol>
 	 */
 	@Test
-	@Order(10)
+	@Order(12)
 	void testModifyUserEmailSameEmail() {
 		System.out.println("USER CONTROLLER TEST: testModifyUserEmailSameEmail");
 
@@ -459,7 +521,7 @@ class UserControllerTest {
 	 * </ol>
 	 */
 	@Test
-	@Order(11)
+	@Order(13)
 	void testModifyUserEmailExistingEmailBadRequest() {
 		System.out.println("USER CONTROLLER TEST: testModifyUserEmailExistingEmailBadRequest");
 
@@ -501,7 +563,7 @@ class UserControllerTest {
 	 * </ol>
 	 */
 	@Test
-	@Order(12)
+	@Order(14)
 	void testModifyUserPassword() {
 		System.out.println("USER CONTROLLER TEST: testModifyUserPassword");
 
@@ -543,7 +605,7 @@ class UserControllerTest {
 	 * </ol>
 	 */
 	@Test
-	@Order(13)
+	@Order(15)
 	void testModifyUserAssignAllRoles() {
 		System.out.println("USER CONTROLLER TEST: testModifyUserAssignAllRoles");
 
@@ -580,7 +642,7 @@ class UserControllerTest {
 	 * </p>
 	 */
 	@Test
-	@Order(14)
+	@Order(16)
 	void testDeleteUser() {
 		System.out.println("USER CONTROLLER TEST: testDeleteUser");
 
@@ -611,7 +673,7 @@ class UserControllerTest {
 	 * </ol>
 	 */
 	@Test
-	@Order(15)
+	@Order(17)
 	void testDeleteAllUsers() {
 		System.out.println("USER CONTROLLER TEST: testDeleteAllUsers");
 		String csrfToken = getCsrf();
@@ -714,6 +776,24 @@ class UserControllerTest {
 				.body("data.size()", is(numberOfUsers))
 				.body("data[0].username", is("orutra971"))
 				.body("data[0].email", is("orutra971@hotmail.com"));
+	}
+
+	/**
+	 * Retrieves a user by their user ID.
+	 *
+	 * @param csrfToken           The CSRF token value.
+	 * @param authorizationToken  The authorization token value.
+	 * @param userId              The ID of the user to retrieve.
+	 * @return The response object containing the user details.
+	 */
+	public Response getUserById(String csrfToken, String authorizationToken, int userId) {
+		return given()
+				.contentType(ContentType.JSON)
+				.header("X-XSRF-TOKEN", csrfToken)  // Provide CSRF as header
+				.header("Authorization", "Bearer " + authorizationToken)
+				.cookie("XSRF-TOKEN", csrfToken)   // And as a
+				.when()
+				.get("/api/users/" + userId);
 	}
 
 	/**

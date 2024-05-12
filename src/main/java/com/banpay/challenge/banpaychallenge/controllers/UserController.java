@@ -61,6 +61,25 @@ public class UserController {
 	}
 
 	/**
+	 * Retrieves a User with the specified id.
+	 *
+	 * @param id The id of the User to retrieve.
+	 * @return A ResponseEntity containing a MessageResponse with the retrieved User or an error message.
+	 */
+	@GetMapping("/{id}")
+	public ResponseEntity<MessageResponse<User>> getUser(@PathVariable Long id) {
+		LOGGER.info("Getting user with id {}", id);
+		Optional<User> user = userService.findUserById(id);
+
+		return user
+				.map(value -> new ResponseEntity<>(new MessageResponse<>("User obtained successfully", value),
+												   HttpStatus.OK))
+				.orElseGet(() -> new ResponseEntity<>(new MessageResponse<>("User not found", null),
+													  HttpStatus.NOT_FOUND));
+
+	}
+
+	/**
 	 * Handles delete user requests to the specified id.
 	 *
 	 * @param id the id of the user.
