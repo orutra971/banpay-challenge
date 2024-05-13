@@ -31,8 +31,7 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push
-      uses: docker/build-push-action@v5
-      with:
-        push: true
-        tags: banpay-challenge:latest
+    - name: 'Build Inventory Image'
+      run: |
+        docker build . --tag ghcr.io/orutra971/banpay-challenge:latest
+        docker push ghcr.io/orutra971/banpay-challenge:latest
